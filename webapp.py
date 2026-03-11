@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["fastapi", "uvicorn", "jinja2", "astropy", "plotly", "numpy"]
+# dependencies = ["fastapi", "uvicorn", "jinja2", "astropy", "plotly", "numpy", "markdown"]
 # ///
 """CRIRES+ L/M-band data browser."""
 
@@ -10,6 +10,7 @@ import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import markdown
 import numpy as np
 import plotly
 import plotly.graph_objects as go
@@ -346,9 +347,60 @@ def index(
     return templates.TemplateResponse("index.html", ctx)
 
 
+def _resolve_dirname(dirname):
+    """Resolve dirname to (tpl_start, base_dirname, pair_num).
+
+    For combined dirs (no suffix): pair_num=None.
+    For pair dirs (_N suffix): strip suffix to find tpl_start.
+    """
+    if dirname in _dir_to_tpl:
+        return _dir_to_tpl[dirname], dirname, None
+    m = re.match(r'^(.+)_(\d+)$', dirname)
+    if m:
+        base, pair_num = m.group(1), int(m.group(2))
+        if base in _dir_to_tpl:
+            return _dir_to_tpl[base], base, pair_num
+    return None, None, None
+
+
+def _pair_frames(frames):
+    """Greedy AB pairing, same logic as make_reduction_sofs.py.
+
+    Returns list of (pair_num, frame_a, frame_b) and list of unpaired frames.
+    """
+    paired = set()
+    pairs = []
+    for i in range(len(frames)):
+        if i in paired:
+            continue
+        for j in range(i + 1, len(frames)):
+            if j in paired:
+                continue
+            if frames[i]["nodpos"] != frames[j]["nodpos"]:
+                pairs.append((i, j))
+                paired.add(i)
+                paired.add(j)
+                break
+    unpaired = [frames[i] for i in range(len(frames)) if i not in paired]
+    result = []
+    for pair_num, (i, j) in enumerate(pairs, 1):
+        result.append((pair_num, frames[i], frames[j]))
+    return result, unpaired
+
+
+@app.get("/about", response_class=HTMLResponse)
+def about(request: Request):
+    readme = (BASE / "README.md").read_text()
+    html = markdown.markdown(readme, extensions=["fenced_code"])
+    return templates.TemplateResponse("about.html", {
+        "request": request,
+        "content": html,
+    })
+
+
 @app.get("/obs/{dirname}", response_class=HTMLResponse)
 def observation(request: Request, dirname: str):
-    tpl_start = _dir_to_tpl.get(dirname)
+    tpl_start, base_dirname, pair_num = _resolve_dirname(dirname)
     if not tpl_start:
         return HTMLResponse("Observation not found", status_code=404)
 
@@ -362,6 +414,8 @@ def observation(request: Request, dirname: str):
 
     obs = dict(row)
     obs["dirname"] = dirname
+    obs["base_dirname"] = base_dirname
+    obs["pair_num"] = pair_num
     st = reduction_status(dirname)
     obs.update(st)
 
@@ -370,7 +424,23 @@ def observation(request: Request, dirname: str):
         "FROM frames WHERE tpl_start = ? ORDER BY date_obs",
         [tpl_start],
     ).fetchall()
-    obs["frames"] = [dict(f) for f in frames]
+    frame_list = [dict(f) for f in frames]
+
+    pairs, unpaired = _pair_frames(frame_list)
+
+    # for pair pages, only show the two frames of that pair
+    if pair_num is not None:
+        obs["frames"] = []
+        for pn, fa, fb in pairs:
+            if pn == pair_num:
+                obs["frames"] = [fa, fb]
+                break
+        obs["pairs"] = []
+        obs["unpaired"] = []
+    else:
+        obs["frames"] = frame_list
+        obs["pairs"] = pairs
+        obs["unpaired"] = unpaired
 
     # prev/next within same setting
     neighbors = conn.execute(
@@ -403,7 +473,8 @@ def observation(request: Request, dirname: str):
 
 @app.get("/api/spectrum/{dirname}")
 def api_spectrum(dirname: str):
-    if dirname not in _dir_to_tpl:
+    tpl_start, _, _ = _resolve_dirname(dirname)
+    if not tpl_start:
         return HTMLResponse("Not found", status_code=404)
     st = reduction_status(dirname)
     if not st["tellcorr"]:
@@ -428,7 +499,8 @@ def unregister_sw():
 
 @app.get("/files/{dirname}/{filename}")
 def serve_file(dirname: str, filename: str):
-    if dirname not in _dir_to_tpl:
+    tpl_start, _, _ = _resolve_dirname(dirname)
+    if not tpl_start:
         return HTMLResponse("Not found", status_code=404)
     filepath = REDUCED / dirname / filename
     if not filepath.exists() or not filepath.is_file():

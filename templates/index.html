@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
+<div style="display:flex; justify-content:space-between; align-items:baseline;">
 <h1>CRIRES+ L/M-band data browser</h1>
+<a class="about-link" href="/about">About</a>
+</div>
 
 <form class="filters" hx-get="/" hx-target="#results" hx-push-url="true" hx-trigger="change, search, keyup changed delay:300ms from:#q">
     <div>

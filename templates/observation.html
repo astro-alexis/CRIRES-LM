@@ -5,9 +5,13 @@
     <a class="back" href="/">&larr; All observations</a>
     {% if prev_dir %}<a href="/obs/{{ prev_dir }}">&larr; Prev ({{ obs.ins_wlen_id }})</a>{% endif %}
     {% if next_dir %}<a href="/obs/{{ next_dir }}">Next ({{ obs.ins_wlen_id }}) &rarr;</a>{% endif %}
+    <a class="about-link" href="/about">About</a>
 </div>
 
-<h1>{{ obs.object }} &mdash; {{ obs.ins_wlen_id }}</h1>
+<h1>{{ obs.object }} &mdash; {{ obs.ins_wlen_id }}{% if obs.pair_num %} (pair {{ obs.pair_num }}){% endif %}</h1>
+{% if obs.pair_num %}
+<p style="margin-bottom:0.5rem;"><a href="/obs/{{ obs.base_dirname }}">&larr; Back to full template</a></p>
+{% endif %}
 
 <dl class="meta-grid">
     <dt>Date</dt><dd class="mono">{{ obs.date_obs }}</dd>
@@ -77,11 +81,33 @@
 <h2>Raw frames</h2>
 <table class="frames-table">
     <thead>
-        <tr><th>DP ID</th><th>Nod</th><th>Date</th><th>DIT</th><th>NDIT</th></tr>
+        <tr><th>Pair</th><th>DP ID</th><th>Nod</th><th>Date</th><th>DIT</th><th>NDIT</th></tr>
     </thead>
     <tbody>
-        {% for f in obs.frames %}
+        {% if obs.pairs %}
+        {% for pair_num, fa, fb in obs.pairs %}
+        {% set pair_dir = obs.base_dirname ~ "_" ~ pair_num %}
+        <tr class="pair-row {% if pair_num % 2 == 0 %}pair-even{% else %}pair-odd{% endif %}" data-pair="{{ pair_num }}" data-href="/obs/{{ pair_dir }}">
+            <td class="pair-num">{{ pair_num }}</td>
+            <td class="mono">{{ fa.dp_id }}</td>
+            <td>{{ fa.nodpos }}</td>
+            <td class="mono">{{ fa.date_obs }}</td>
+            <td class="mono">{{ fa.det_dit }}s</td>
+            <td class="mono">{{ fa.det_ndit }}</td>
+        </tr>
+        <tr class="pair-row {% if pair_num % 2 == 0 %}pair-even{% else %}pair-odd{% endif %}" data-pair="{{ pair_num }}" data-href="/obs/{{ pair_dir }}">
+            <td></td>
+            <td class="mono">{{ fb.dp_id }}</td>
+            <td>{{ fb.nodpos }}</td>
+            <td class="mono">{{ fb.date_obs }}</td>
+            <td class="mono">{{ fb.det_dit }}s</td>
+            <td class="mono">{{ fb.det_ndit }}</td>
+        </tr>
+        {% endfor %}
+        {% if obs.unpaired %}
+        {% for f in obs.unpaired %}
         <tr>
+            <td></td>
             <td class="mono">{{ f.dp_id }}</td>
             <td>{{ f.nodpos }}</td>
             <td class="mono">{{ f.date_obs }}</td>
@@ -89,6 +115,30 @@
             <td class="mono">{{ f.det_ndit }}</td>
         </tr>
         {% endfor %}
+        {% endif %}
+        {% else %}
+        {% for f in obs.frames %}
+        <tr>
+            <td></td>
+            <td class="mono">{{ f.dp_id }}</td>
+            <td>{{ f.nodpos }}</td>
+            <td class="mono">{{ f.date_obs }}</td>
+            <td class="mono">{{ f.det_dit }}s</td>
+            <td class="mono">{{ f.det_ndit }}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
     </tbody>
 </table>
+{% if obs.pairs %}
+<script>
+document.querySelectorAll('.pair-row').forEach(row => {
+    var pair = row.dataset.pair;
+    var siblings = document.querySelectorAll('.pair-row[data-pair="' + pair + '"]');
+    row.addEventListener('mouseenter', () => siblings.forEach(r => r.classList.add('pair-hover')));
+    row.addEventListener('mouseleave', () => siblings.forEach(r => r.classList.remove('pair-hover')));
+    row.addEventListener('click', () => { window.location = row.dataset.href; });
+});
+</script>
+{% endif %}
 {% endblock %}
