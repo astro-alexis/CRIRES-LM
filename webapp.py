@@ -38,6 +38,14 @@ app = FastAPI(title="CRIRES+ L/M Browser", lifespan=lifespan)
 templates = Jinja2Templates(directory=str(BASE / "templates"))
 
 
+@app.middleware("http")
+async def add_base_url(request, call_next):
+    """Make root_path available to templates as `base`."""
+    base = request.scope.get("root_path", "")
+    templates.env.globals["base"] = base
+    return await call_next(request)
+
+
 # --- Database ---
 
 def get_db():
@@ -522,5 +530,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--reload", action="store_true")
+    p.add_argument("--root-path", default="")
     args = p.parse_args()
-    uvicorn.run("webapp:app", host="0.0.0.0", port=args.port, reload=args.reload)
+    uvicorn.run("webapp:app", host="0.0.0.0", port=args.port,
+                reload=args.reload, root_path=args.root_path)

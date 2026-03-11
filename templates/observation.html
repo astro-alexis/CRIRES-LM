@@ -2,15 +2,15 @@
 {% block title %}{{ obs.object }} {{ obs.ins_wlen_id }} - CRIRES+ Browser{% endblock %}
 {% block content %}
 <div class="nav-links">
-    <a class="back" href="/">&larr; All observations</a>
-    {% if prev_dir %}<a href="/obs/{{ prev_dir }}">&larr; Prev ({{ obs.ins_wlen_id }})</a>{% endif %}
-    {% if next_dir %}<a href="/obs/{{ next_dir }}">Next ({{ obs.ins_wlen_id }}) &rarr;</a>{% endif %}
-    <a class="about-link" href="/about">About</a>
+    <a class="back" href="{{ base }}/">&larr; All observations</a>
+    {% if prev_dir %}<a href="{{ base }}/obs/{{ prev_dir }}">&larr; Prev ({{ obs.ins_wlen_id }})</a>{% endif %}
+    {% if next_dir %}<a href="{{ base }}/obs/{{ next_dir }}">Next ({{ obs.ins_wlen_id }}) &rarr;</a>{% endif %}
+    <a class="about-link" href="{{ base }}/about">About</a>
 </div>
 
 <h1>{{ obs.object }} &mdash; {{ obs.ins_wlen_id }}{% if obs.pair_num %} (pair {{ obs.pair_num }}){% endif %}</h1>
 {% if obs.pair_num %}
-<p style="margin-bottom:0.5rem;"><a href="/obs/{{ obs.base_dirname }}">&larr; Back to full template</a></p>
+<p style="margin-bottom:0.5rem;"><a href="{{ base }}/obs/{{ obs.base_dirname }}">&larr; Back to full template</a></p>
 {% endif %}
 
 <dl class="meta-grid">
@@ -37,7 +37,7 @@
 <h2>Spectrum</h2>
 <div id="spectrum-plot" style="height:550px; display:flex; align-items:center; justify-content:center; color:#999;">Loading spectrum...</div>
 <script>
-    fetch('/api/spectrum/{{ obs.dirname }}')
+    fetch('{{ base }}/api/spectrum/{{ obs.dirname }}')
         .then(r => r.json())
         .then(fig => {
             var el = document.getElementById('spectrum-plot');
@@ -62,7 +62,7 @@
 <h2>Downloads</h2>
 <ul class="dl-list">
     {% for f in downloads %}
-    <li><a href="/files/{{ obs.dirname }}/{{ f }}" download>{{ f }}</a></li>
+    <li><a href="{{ base }}/files/{{ obs.dirname }}/{{ f }}" download>{{ f }}</a></li>
     {% endfor %}
 </ul>
 {% endif %}
@@ -71,8 +71,8 @@
 <h2>Diagnostic plots</h2>
 <div class="images-grid">
     {% for img in images %}
-    <a href="/files/{{ obs.dirname }}/{{ img }}" target="_blank">
-        <img src="/files/{{ obs.dirname }}/{{ img }}" alt="{{ img }}" loading="lazy">
+    <a href="{{ base }}/files/{{ obs.dirname }}/{{ img }}" target="_blank">
+        <img src="{{ base }}/files/{{ obs.dirname }}/{{ img }}" alt="{{ img }}" loading="lazy">
     </a>
     {% endfor %}
 </div>
@@ -87,7 +87,7 @@
         {% if obs.pairs %}
         {% for pair_num, fa, fb in obs.pairs %}
         {% set pair_dir = obs.base_dirname ~ "_" ~ pair_num %}
-        <tr class="pair-row {% if pair_num % 2 == 0 %}pair-even{% else %}pair-odd{% endif %}" data-pair="{{ pair_num }}" data-href="/obs/{{ pair_dir }}">
+        <tr class="pair-row {% if pair_num % 2 == 0 %}pair-even{% else %}pair-odd{% endif %}" data-pair="{{ pair_num }}" data-href="{{ base }}/obs/{{ pair_dir }}">
             <td class="pair-num">{{ pair_num }}</td>
             <td class="mono">{{ fa.dp_id }}</td>
             <td>{{ fa.nodpos }}</td>
@@ -95,7 +95,7 @@
             <td class="mono">{{ fa.det_dit }}s</td>
             <td class="mono">{{ fa.det_ndit }}</td>
         </tr>
-        <tr class="pair-row {% if pair_num % 2 == 0 %}pair-even{% else %}pair-odd{% endif %}" data-pair="{{ pair_num }}" data-href="/obs/{{ pair_dir }}">
+        <tr class="pair-row {% if pair_num % 2 == 0 %}pair-even{% else %}pair-odd{% endif %}" data-pair="{{ pair_num }}" data-href="{{ base }}/obs/{{ pair_dir }}">
             <td></td>
             <td class="mono">{{ fb.dp_id }}</td>
             <td>{{ fb.nodpos }}</td>

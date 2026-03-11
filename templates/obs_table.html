@@ -26,7 +26,7 @@
             </td>
             <td>
                 {% if obs.extracted %}
-                <a href="/obs/{{ obs.dirname }}">{{ obs.object }}</a>
+                <a href="{{ base }}/obs/{{ obs.dirname }}">{{ obs.object }}</a>
                 {% else %}
                 {{ obs.object }}
                 {% endif %}

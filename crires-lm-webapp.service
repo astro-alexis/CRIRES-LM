@@ -7,7 +7,7 @@ Type=simple
 User=tom
 Group=tom
 WorkingDirectory=/home/criresftp/data/LM_2021-25
-ExecStart=/home/tom/.local/bin/uv run webapp.py --port 8055
+ExecStart=/home/tom/.local/bin/uv run webapp.py --port 8055 --root-path /crires-lm
 Restart=on-failure
 RestartSec=5
 Environment=MPLBACKEND=Agg
