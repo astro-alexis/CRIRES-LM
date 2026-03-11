@@ -1,14 +1,14 @@
 <script>document.getElementById('count').textContent = '{{ n_total }} observations';</script>
-<table>
+<table id="obs-table">
     <thead>
         <tr>
-            <th>Target</th>
-            <th>Setting</th>
-            <th>Date</th>
-            <th>Programme</th>
-            <th>Frames</th>
-            <th>DIT</th>
-            <th>Slit</th>
+            <th data-sort="text">Target</th>
+            <th data-sort="text">Setting</th>
+            <th data-sort="text">Date</th>
+            <th data-sort="text">Programme</th>
+            <th data-sort="num">Frames</th>
+            <th data-sort="num">DIT</th>
+            <th data-sort="num">Slit</th>
         </tr>
     </thead>
     <tbody>
@@ -25,3 +25,34 @@
         {% endfor %}
     </tbody>
 </table>
+<script>
+(function() {
+    var table = document.getElementById('obs-table');
+    if (!table) return;
+    var headers = table.querySelectorAll('th[data-sort]');
+    headers.forEach(function(th, colIdx) {
+        th.style.cursor = 'pointer';
+        th.style.userSelect = 'none';
+        th.addEventListener('click', function() {
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.rows);
+            var type = th.dataset.sort;
+            var asc = th.dataset.dir !== 'asc';
+            headers.forEach(function(h) { h.dataset.dir = ''; h.classList.remove('sort-asc', 'sort-desc'); });
+            th.dataset.dir = asc ? 'asc' : 'desc';
+            th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+            rows.sort(function(a, b) {
+                var av = a.cells[colIdx].textContent.trim();
+                var bv = b.cells[colIdx].textContent.trim();
+                if (type === 'num') {
+                    av = parseFloat(av) || 0;
+                    bv = parseFloat(bv) || 0;
+                    return asc ? av - bv : bv - av;
+                }
+                return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+            });
+            rows.forEach(function(r) { tbody.appendChild(r); });
+        });
+    });
+})();
+</script>
