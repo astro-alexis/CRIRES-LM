@@ -215,6 +215,8 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
         # direct vipere WL for fitted orders
         for odrs, xcen, wcoeffs in solutions:
             wl_col = f"{odrs:02d}_01_WL"
+            if wl_col not in hdul[f'CHIP{chip}.INT1'].columns.names:
+                continue
             wl_vipere = np.polynomial.polynomial.polyval(
                 pixels - xcen, wcoeffs) / 10.0
             hdul[f'CHIP{chip}.INT1'].data[wl_col] = wl_vipere
@@ -228,6 +230,8 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
                 Path(tellcorr_fits).parent / f'wavecorr_chip{chip}_{ab}.png')
             for odrs in unfitted_orders:
                 wl_col = f"{odrs:02d}_01_WL"
+                if wl_col not in hdul[f'CHIP{chip}.INT1'].columns.names:
+                    continue
                 wl_interp = eval_2d(pixels, odrs)
                 hdul[f'CHIP{chip}.INT1'].data[wl_col] = wl_interp
                 print(f"    order {odrs:02d}: interpolated "
