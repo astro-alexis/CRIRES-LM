@@ -96,13 +96,16 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
     if oset is None:
         oset = OSET_OVERRIDE.get(setting, f"1:{n_orders * 3}")
 
-    config = str(BASE / 'config_vipere.yaml')
     cmd = [
         'uvx', '--from', str(Path.home() / 'vipere.git'), 'vipere',
         str(extracted_fits),
-        '-config_file', config,
         '-oset', oset,
         '-plot', '0',
+        '-vcut', '10',
+        '-deg_norm', '4',
+        '-deg_wave', '2',
+        '-telluric', 'add',
+        '-o', 'tellfit',
     ]
     print(f"Running: {' '.join(cmd)}")
     env = os.environ | {'MPLBACKEND': 'Agg'}
