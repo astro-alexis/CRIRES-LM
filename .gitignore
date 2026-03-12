@@ -20,7 +20,9 @@ raw/
 flats/raw/
 
 # Reduced data products (huge, regenerable)
-reduced/
+reduced/**
+!reduced/*/
+!reduced/*/nodd.sof
 
 # Python
 __pycache__/

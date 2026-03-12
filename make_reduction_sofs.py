@@ -5,8 +5,10 @@
 # ///
 """Generate directory structure and SOF files for reducing all science AB pairs."""
 
+import bisect
 import re
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 import pandas as pd
 
@@ -24,6 +26,33 @@ conn.close()
 
 print(f'{len(df)} frames with nod positions')
 
+# build lookup of flat dates per setting from flats/ directory structure
+flat_dates = {}  # setting -> sorted list of (datetime, dirname)
+for d in sorted((BASE / 'flats').iterdir()):
+    if not d.is_dir() or d.name in ('raw',):
+        continue
+    parts = d.name.rsplit('_', 1)
+    if len(parts) != 2:
+        continue
+    setting, date_str = parts
+    dt = datetime.fromisoformat(date_str)
+    flat_dates.setdefault(setting, []).append((dt, d.name))
+
+
+def nearest_flat(setting, obs_date):
+    """Find the flat directory nearest in time to obs_date."""
+    candidates = flat_dates.get(setting, [])
+    if not candidates:
+        return None
+    dt = datetime.fromisoformat(obs_date[:10])
+    idx = bisect.bisect_left(candidates, (dt,))
+    best = None
+    for i in (idx - 1, idx):
+        if 0 <= i < len(candidates):
+            if best is None or abs(candidates[i][0] - dt) < abs(best[0] - dt):
+                best = candidates[i]
+    return best[1]
+
 
 def sanitize(name):
     return re.sub(r'[^a-zA-Z0-9._+-]', '_', name)
@@ -40,7 +69,9 @@ for tpl_start, group in df.groupby('tpl_start'):
     obj = group.iloc[0]['object']
 
     tw = f'./{setting}_tw.fits'
-    flat = f'../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits'
+    flat_dir = nearest_flat(setting, tpl_start)
+    flat = f'../../flats/{flat_dir}/cr2res_cal_flat_Open_master_flat.fits'
+    blaze = f'../../flats/{flat_dir}/cr2res_cal_flat_Open_blaze.fits'
 
     frames = group.sort_values('date_obs').reset_index(drop=True)
 
@@ -75,6 +106,7 @@ for tpl_start, group in df.groupby('tpl_start'):
             f.write(f'../../raw/{f2["dp_id"]}.fits OBS_NODDING_OTHER\n')
             f.write(f'{tw} UTIL_WAVE_TW\n')
             f.write(f'{flat} CAL_FLAT\n')
+            f.write(f'{blaze} CAL_FLAT_EXTRACT_1D\n')
 
         n_pairs += 1
 
