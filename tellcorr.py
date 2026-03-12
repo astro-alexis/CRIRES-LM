@@ -24,6 +24,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
+BASE = Path(__file__).parent
+
 ORDERS_PER_CHIP = {
     'L3244': 6, 'L3262': 6, 'L3302': 6, 'L3340': 6,
     'L3377': 7, 'L3412': 7, 'L3426': 7,
@@ -94,13 +96,13 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
     if oset is None:
         oset = OSET_OVERRIDE.get(setting, f"1:{n_orders * 3}")
 
+    config = str(BASE / 'config_vipere.yaml')
     cmd = [
         'uvx', '--from', str(Path.home() / 'vipere.git'), 'vipere',
         str(extracted_fits),
+        '-config_file', config,
         '-oset', oset,
-        '-o', 'tellfit',
         '-plot', '0',
-        '-vcut', '10',
     ]
     print(f"Running: {' '.join(cmd)}")
     env = os.environ | {'MPLBACKEND': 'Agg'}

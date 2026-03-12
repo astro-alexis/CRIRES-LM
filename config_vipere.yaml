@@ -1,0 +1,16 @@
+inst: CRIRES
+chunks: 1
+deg_bkg: 1
+deg_norm: 4
+deg_wave: 2
+ip: g
+iphs: 50
+kapsig: "15 6"
+kapsig_ctpl: 0.6
+oversampling: 1
+rv_guess: 1
+tag: tellfit
+telluric: add
+tsig: 1
+vcut: 10
+wgt: 0
