@@ -40,6 +40,13 @@
             {% endfor %}
         </select>
     </div>
+    <div>
+        <label for="variant">Reduction</label>
+        <select name="variant" id="variant">
+            <option value="" {{ 'selected' if not variant }}>With flat</option>
+            <option value="noflat" {{ 'selected' if variant == 'noflat' }}>Without flat</option>
+        </select>
+    </div>
     <span class="count" id="count">{{ n_total }} observations</span>
 </form>
 

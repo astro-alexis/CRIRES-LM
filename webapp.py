@@ -21,7 +21,14 @@ from fastapi.templating import Jinja2Templates
 
 BASE = Path(__file__).parent
 REDUCED = BASE / "reduced"
+REDUCED_NOFLAT = BASE / "reduced_noflat"
 FLATS = BASE / "flats"
+
+
+def _reduced_dir(variant=None):
+    if variant == "noflat":
+        return REDUCED_NOFLAT
+    return REDUCED
 
 # precomputed lookup: dirname -> tpl_start
 _dir_to_tpl: dict[str, str] = {}
@@ -103,12 +110,12 @@ def _make_dirname(obj, setting, tpl_start):
     return f'{_sanitize(obj)}_{setting}_{tpl_short}'
 
 
-def _dirpath(dirname):
-    return REDUCED / dirname
+def _dirpath(dirname, variant=None):
+    return _reduced_dir(variant) / dirname
 
 
-def reduction_status(dirname):
-    dp = _dirpath(dirname)
+def reduction_status(dirname, variant=None):
+    dp = _dirpath(dirname, variant)
     if not dp.exists():
         return {"exists": False, "extracted": False, "tellcorr": False, "wavecorr": False}
     return {
@@ -119,9 +126,9 @@ def reduction_status(dirname):
     }
 
 
-def read_spectra(dirname, nod="A"):
+def read_spectra(dirname, nod="A", variant=None):
     """Read spectral data from tellcorr FITS only. Returns {order: [segments]}."""
-    dp = _dirpath(dirname)
+    dp = _dirpath(dirname, variant)
     fitsfile = dp / f"cr2res_obs_nodding_extracted{nod}_tellcorr.fits"
     if not fitsfile.exists():
         return {}
@@ -172,9 +179,9 @@ def read_spectra(dirname, nod="A"):
     return orders
 
 
-def make_spectrum_plot(dirname):
-    spec_a = read_spectra(dirname, "A")
-    spec_b = read_spectra(dirname, "B")
+def make_spectrum_plot(dirname, variant=None):
+    spec_a = read_spectra(dirname, "A", variant)
+    spec_b = read_spectra(dirname, "B", variant)
     if not spec_a and not spec_b:
         return None
 
@@ -291,6 +298,7 @@ def index(
     object: str = Query(None),
     setting: str = Query(None),
     prog_id: str = Query(None),
+    variant: str = Query(None),
 ):
     conn = get_db()
 
@@ -328,10 +336,12 @@ def index(
     for row in rows:
         d = dict(row)
         d["dirname"] = _tpl_to_dir.get(d["tpl_start"], "")
-        d.update(reduction_status(d["dirname"]))
+        d.update(reduction_status(d["dirname"], variant))
         if not d["tellcorr"]:
             continue
         observations.append(d)
+
+    variant_qs = f"?variant={variant}" if variant else ""
 
     ctx = {
         "request": request,
@@ -344,6 +354,8 @@ def index(
         "sel_setting": setting,
         "sel_prog_id": prog_id,
         "n_total": len(observations),
+        "variant": variant,
+        "variant_qs": variant_qs,
     }
 
     if request.headers.get("HX-Request"):
@@ -505,7 +517,7 @@ def serve_flat_file(dirname: str, filename: str):
 
 
 @app.get("/obs/{dirname}", response_class=HTMLResponse)
-def observation(request: Request, dirname: str):
+def observation(request: Request, dirname: str, variant: str = Query(None)):
     tpl_start, base_dirname, pair_num = _resolve_dirname(dirname)
     if not tpl_start:
         return HTMLResponse("Observation not found", status_code=404)
@@ -522,7 +534,7 @@ def observation(request: Request, dirname: str):
     obs["dirname"] = dirname
     obs["base_dirname"] = base_dirname
     obs["pair_num"] = pair_num
-    st = reduction_status(dirname)
+    st = reduction_status(dirname, variant)
     obs.update(st)
 
     frames = conn.execute(
@@ -560,7 +572,7 @@ def observation(request: Request, dirname: str):
     next_dir = _tpl_to_dir.get(tpl_list[idx + 1]) if idx < len(tpl_list) - 1 else None
     conn.close()
 
-    dp = _dirpath(dirname)
+    dp = _dirpath(dirname, variant)
     images = sorted(p.name for p in dp.glob("*.png")) if dp.exists() else []
     downloads = sorted(
         p.name for p in dp.iterdir()
@@ -576,6 +588,11 @@ def observation(request: Request, dirname: str):
                 flat_dirname = Path(line.split()[0]).parent.name
                 break
 
+    variant_qs = f"?variant={variant}" if variant else ""
+    other_variant = None if variant else "noflat"
+    other_variant_qs = f"?variant={other_variant}" if other_variant else ""
+    other_variant_label = "with flat" if variant else "without flat"
+
     return templates.TemplateResponse("observation.html", {
         "request": request,
         "obs": obs,
@@ -584,18 +601,22 @@ def observation(request: Request, dirname: str):
         "prev_dir": prev_dir,
         "next_dir": next_dir,
         "flat_dirname": flat_dirname,
+        "variant": variant,
+        "variant_qs": variant_qs,
+        "other_variant_qs": other_variant_qs,
+        "other_variant_label": other_variant_label,
     })
 
 
 @app.get("/api/spectrum/{dirname}")
-def api_spectrum(dirname: str):
+def api_spectrum(dirname: str, variant: str = Query(None)):
     tpl_start, _, _ = _resolve_dirname(dirname)
     if not tpl_start:
         return HTMLResponse("Not found", status_code=404)
-    st = reduction_status(dirname)
+    st = reduction_status(dirname, variant)
     if not st["tellcorr"]:
         return {"data": [], "layout": {}}
-    fig = make_spectrum_plot(dirname)
+    fig = make_spectrum_plot(dirname, variant)
     if not fig:
         return {"data": [], "layout": {}}
     return fig.to_plotly_json()
@@ -614,11 +635,11 @@ def unregister_sw():
 
 
 @app.get("/files/{dirname}/{filename}")
-def serve_file(dirname: str, filename: str):
+def serve_file(dirname: str, filename: str, variant: str = Query(None)):
     tpl_start, _, _ = _resolve_dirname(dirname)
     if not tpl_start:
         return HTMLResponse("Not found", status_code=404)
-    filepath = REDUCED / dirname / filename
+    filepath = _reduced_dir(variant) / dirname / filename
     if not filepath.exists() or not filepath.is_file():
         return HTMLResponse("Not found", status_code=404)
 
