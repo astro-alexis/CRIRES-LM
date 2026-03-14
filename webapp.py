@@ -579,13 +579,16 @@ def observation(request: Request, dirname: str, variant: str = Query(None)):
         if p.name.endswith("_tellcorr.fits")
     ) if dp.exists() else []
 
-    # extract flat directory from SOF
+    # extract flat directory from calib.sof (or nodd.sof for older layouts)
     flat_dirname = None
-    sof = dp / "nodd.sof" if dp.exists() else None
-    if sof and sof.exists():
-        for line in sof.read_text().splitlines():
-            if "CAL_FLAT_MASTER" in line:
-                flat_dirname = Path(line.split()[0]).parent.name
+    for sof_name in ("calib.sof", "nodd.sof"):
+        sof = dp / sof_name if dp.exists() else None
+        if sof and sof.exists():
+            for line in sof.read_text().splitlines():
+                if "CAL_FLAT_MASTER" in line:
+                    flat_dirname = Path(line.split()[0]).parent.name
+                    break
+            if flat_dirname:
                 break
 
     variant_qs = f"?variant={variant}" if variant else ""
