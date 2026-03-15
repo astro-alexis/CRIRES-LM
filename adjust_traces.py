@@ -1,13 +1,12 @@
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["astropy", "scipy", "numpy"]
+# dependencies = ["astropy", "numpy"]
 # ///
 """Measure trace Y-shift from raw science frames and write adjusted _tw.fits.
 
-For each reduction directory, cross-correlates the spatial edge profile of a
-raw frame against the order boundaries in the _tw.fits to find the Y offset
-due to instrument flexure. Writes an adjusted copy of _tw.fits into the
-reduction directory and updates the SOF to use it.
+For each reduction directory, measures the Y offset due to instrument flexure
+by finding the shift that maximizes the total flux inside the expected order
+boundaries. Writes an adjusted copy of _tw.fits into the reduction directory.
 
 Usage:
     uv run adjust_traces.py reduced/some_dir
@@ -19,13 +18,12 @@ import sys
 import numpy as np
 from pathlib import Path
 from astropy.io import fits
-from scipy.ndimage import uniform_filter1d
 
 MAX_SHIFT = 100
 
 
 def measure_shift(raw_path, tw_path):
-    """Return per-chip Y-shifts (pixels) by edge cross-correlation."""
+    """Return per-chip Y-shifts by maximizing flux inside shifted order boundaries."""
     raw = fits.open(raw_path)
     tw = fits.open(tw_path)
     shifts = {}
@@ -35,33 +33,29 @@ def measure_shift(raw_path, tw_path):
         data = raw[chip_name].data
         tw_tab = tw[chip_name].data
 
-        # spatial profile: median across central half of detector
         observed = np.nanmedian(data[:, 500:1500], axis=1).astype(float)
-        obs_smooth = uniform_filter1d(observed, 5)
-        obs_edges = np.abs(np.gradient(obs_smooth))
-        obs_edges[:50] = 0
-        obs_edges[2000:] = 0
+        observed = np.nan_to_num(observed, 0)
 
-        # synthetic edge profile from trace boundaries at detector center
+        # order boundaries at detector center
         xcol = 1024
-        syn_edges = np.zeros(2048)
+        order_bounds = []
         for row in tw_tab:
             y_upper = np.polyval(row["Upper"][::-1], xcol)
             y_lower = np.polyval(row["Lower"][::-1], xcol)
-            for ye in [y_lower, y_upper]:
-                yi = int(round(ye))
-                for delta in range(-5, 6):
-                    idx = yi + delta
-                    if 0 <= idx < 2048:
-                        syn_edges[idx] += np.exp(-0.5 * (delta / 2.0) ** 2)
+            order_bounds.append((min(y_lower, y_upper), max(y_lower, y_upper)))
 
-        # cross-correlate
+        # find shift that maximizes total flux inside orders
         best_cc = -np.inf
         best_dy = 0
         cc_at = {}
         for dy in range(-MAX_SHIFT, MAX_SHIFT + 1):
-            shifted = np.roll(syn_edges, dy)
-            cc = np.sum(obs_edges * shifted)
+            mask = np.zeros(2048, dtype=bool)
+            for yl, yu in order_bounds:
+                lo = max(0, int(round(yl + dy)))
+                hi = min(2048, int(round(yu + dy)) + 1)
+                if lo < hi:
+                    mask[lo:hi] = True
+            cc = np.sum(observed[mask])
             cc_at[dy] = cc
             if cc > best_cc:
                 best_cc = cc
