@@ -33,7 +33,7 @@ Reduction of all public CRIRES+ L-band (2.8-4.2 um) and M-band (4.2-5.5 um) scie
 - Flat output products: `cr2res_cal_flat_Open_master_flat.fits`, `_bpm.fits`, `_blaze.fits`, `_slit_func.fits`, `_slit_model.fits`, `_tw.fits`
 - Multiple reductions in same output dir overwrite each other — use separate dirs or run from inside subdirs
 - SOF format: `filename TAG` per line. Tags: `FLAT`, `OBS_NODDING_OTHER`, `UTIL_WAVE_TW`, `CAL_FLAT`, `CAL_FLAT_EXTRACT_1D` (blaze), `UTIL_TRACE`
-- Batch run: `ls reduced/*/nodd.sof | parallel --bar -j 8 'cd {//} && esorex cr2res_obs_nodding nodd.sof 2>&1 > esorex.log'`
+- Batch run: `ls reduced/*/nodd.sof | parallel --bar -j 8 'cd {//} && esorex cr2res_obs_nodding *.sof 2>&1 > esorex.log'`
 
 ## CRIRES calibration OBs
 - L-band flat/dark calibration OB: `60.A-9051(A)`, ob_id `3346506`
@@ -81,7 +81,7 @@ All hot B/O-type stars with clean continua in L/M band:
 - `tellurics/{setting}/` — one subdir per wavelength setting (16 settings: L3244-L3426, M4187-M4519)
 - Each contains: raw A+B FITS, `nodd.sof`, esorex output, vipere output
 - `nodd.sof` format: raw fits as `./CRIRE...fits OBS_NODDING_OTHER`, calibs as `../../{file} TAG`
-- Run esorex from inside the subdir: `cd {setting} && esorex cr2res_obs_nodding nodd.sof`
+- Run esorex from inside the subdir: `cd {setting} && esorex cr2res_obs_nodding *.sof`
 - vipere output: `telluricA.par.dat`, `telluricA.rvo.dat`, `telluricB.par.dat`, `telluricB.rvo.dat`
 
 ### Scripts in tellurics/
