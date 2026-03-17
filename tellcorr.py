@@ -97,7 +97,7 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
         oset = OSET_OVERRIDE.get(setting, f"1:{n_orders * 3 + 1}")
 
     cmd = [
-        'uvx', '--refresh', '--from', str(Path.home() / 'vipere.git'), 'vipere',
+        'uv', 'run', '--with', str(Path.home() / 'vipere.git'), 'vipere',
         str(extracted_fits),
         '-oset', oset,
         '-plot', '0',
