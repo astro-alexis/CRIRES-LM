@@ -1,0 +1,305 @@
+\documentclass{aa}
+
+\usepackage{txfonts}
+
+\newcommand{\crires}{CRIRES$^+$}
+\newcommand{\um}{$\mu$m}
+\newcommand{\kms}{km\,s$^{-1}$}
+\newcommand{\vipere}{\texttt{vip\`ere}}
+\newcommand{\esorex}{\texttt{esorex}}
+\newcommand{\crtwores}{\texttt{cr2res}}
+
+\begin{document}
+
+\title{CRIRES$^+$ L- and M-band spectral archive with telluric-calibrated slit tilt and wavelength solutions}
+
+\author{I.\,V.~Hartogs\inst{1}}
+
+\institute{Department of Physics and Astronomy, Uppsala University,
+  Box 516, SE-75120 Uppsala, Sweden\\
+  \email{tom@placeholder.se}}
+
+\date{Received ???; accepted ???}
+
+\abstract{
+We present a uniformly reprocessed archive of all public \crires{} L-band
+(2.8--4.2\,\um) and M-band (4.2--5.5\,\um) science observations obtained
+between September 2021 and January 2025, totalling 11\,131 raw frames
+across 16 wavelength settings. The reprocessing improves upon the standard
+ESO pipeline by incorporating a slit tilt calibration derived from
+telluric standard observations, per-observation flexure correction of the
+spectral traces, and telluric correction using the \vipere{} forward
+modelling tool. The resulting 5649 extracted AB nod-pair spectra, spanning
+156 unique targets from 68 ESO programmes, are served through an
+interactive web archive.
+}
+
+\keywords{infrared: general -- techniques: spectroscopic -- atmospheric effects --
+methods: data analysis}
+
+\maketitle
+
+%--------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+\crires{} is the upgraded cryogenic high-resolution infrared echelle
+spectrograph at ESO's Very Large Telescope \citep{Dorn2023}. It provides
+cross-dispersed spectroscopy from 0.95 to 5.3\,\um{} with a spectral
+resolving power up to $R \approx 100\,000$, recording three detector chips
+of $2048 \times 2048$ pixels each with 5--7 echelle orders per chip.
+
+While the near-infrared ($YJHK$) modes of \crires{} are well supported by
+the standard \crtwores{} pipeline \citep{cr2res} and included in ESO's
+Phase~3 data releases, the thermal infrared L-band (2.8--4.2\,\um) and
+M-band (4.2--5.5\,\um) settings are explicitly excluded from the Phase~3
+archive. Two instrument-specific issues affect L/M reductions that the
+standard pipeline does not address: (1) the slit tilt, which is
+wavelength-dependent and significant in the thermal infrared, is not
+calibrated for these bands; and (2) mechanical flexure of the instrument
+shifts the spectral traces on the detector between calibration and science
+observations, degrading extraction quality when uncorrected.
+
+This paper describes a bulk reprocessing of all public \crires{} L/M
+science data that addresses both issues and additionally provides telluric
+correction. The reduced spectra are served through an interactive web
+archive at \url{https://neon.physics.uu.se/crires-lm/}. The reduction
+code is publicly available at
+\url{https://github.com/ivh/CRIRES-LM}.
+
+
+%--------------------------------------------------------------------
+\section{Data}
+\label{sec:data}
+
+We queried the ESO archive for all \crires{} science frames with
+wavelength settings in the L- and M-bands, covering the period from
+September 2021 (first \crires{} science operations) through January 2025.
+This yielded 11\,131 raw frames from 68 programmes observing 156 distinct
+targets across 16 wavelength settings (Table~\ref{tab:settings}).
+
+The observations use the standard \texttt{CRIRES\_spec\_obs\_AutoNodOnSlit}
+template with ABBA nodding along the slit. Frames were paired into AB
+nod pairs by greedy matching within each observing template sequence,
+producing 5649 pairs across 412 combined observing sequences. An
+additional 233 flat-field calibration epochs (deep flats with
+NDIT\,$\geq$\,10) were retrieved for the same period.
+
+\begin{table}
+\caption{Wavelength settings and data volume.}
+\label{tab:settings}
+\centering
+\begin{tabular}{lrrr}
+\hline\hline
+Setting & Range (nm) & Frames & Pairs \\
+\hline
+L3244 & 2869--3982 & 19 & 16 \\
+L3262 & 2886--4003 & 972 & 498 \\
+L3302 & 2923--4050 & 921 & 446 \\
+L3340 & 2960--4082 & 765 & 399 \\
+L3377 & 2843--4136 & 726 & 395 \\
+L3412 & 2873--4177 & 61 & 36 \\
+L3426 & 2886--4193 & 222 & 101 \\
+\hline
+M4187 & 3584--5504 & 76 & 40 \\
+M4211 & 3381--5535 & 1118 & 578 \\
+M4266 & 3427--5604 & 137 & 68 \\
+M4318 & 3470--5154 & 1241 & 638 \\
+M4368 & 3513--5211 & 4761 & 2398 \\
+M4416 & 3552--5264 & 18 & 12 \\
+M4461 & 3614--5314 & 74 & 39 \\
+M4504 & 3870--5364 & 12 & 8 \\
+M4519 & 3435--5370 & 8 & 4 \\
+\hline
+Total & & 11\,131 & 5649 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+%--------------------------------------------------------------------
+\section{Method}
+\label{sec:method}
+
+The reduction proceeds in four stages: slit tilt calibration from
+telluric standard stars (\S\,\ref{sec:tilt}), wavelength calibration
+update (\S\,\ref{sec:wavecal}), per-observation trace adjustment and
+extraction (\S\,\ref{sec:extraction}), and telluric correction
+(\S\,\ref{sec:tellcorr}).
+
+
+%--------------------------------------------------------------------
+\subsection{Slit tilt calibration}
+\label{sec:tilt}
+
+The \crires{} slit is not perfectly aligned with the detector columns;
+the resulting tilt is wavelength-dependent and, if uncorrected, causes
+spectral features to shift in wavelength as a function of position along
+the slit. For nodding observations, where the spectrum is extracted at
+two different slit positions, this introduces a systematic wavelength
+offset between the A and B nod spectra. In the L and M bands, the slit
+tilt ranges from about $+0.01$ to $-0.09$ pixels per spatial pixel,
+corresponding to wavelength offsets of several \kms{} over the nod throw.
+
+We calibrate the slit tilt using a dedicated telluric standard star for
+each of the 16 wavelength settings (Table~\ref{tab:tellstds}). These are
+hot B- and O-type stars whose intrinsic spectra are featureless in the
+L/M bands, so the observed spectral features are purely telluric. Each
+standard is observed with an AB nod pair along the slit.
+
+We reduce each nod pair with \esorex{} \texttt{cr2res\_obs\_nodding} and
+then fit the extracted A and B spectra independently with \vipere{}
+\citep{vipere}, a forward-modelling tool that simultaneously fits the
+telluric absorption, wavelength solution, continuum, and instrumental
+profile. The key output is a wavelength polynomial per detector order and
+per nod position.
+
+The slit tilt at each pixel is then computed as the wavelength difference
+between the A and B fits, converted to a pixel shift and divided by the
+measured nod throw (in pixels). The nod throw is determined by fitting
+double Gaussians to the spatial profile of the combined A frame.
+
+Collecting measurements across all settings and chips, we fit a linear
+relation between tilt and wavelength for each band:
+\begin{align}
+  t_L(\lambda) &= -6.97 \times 10^{-5}\,\lambda + 0.203 \quad
+    (\mathrm{rms} = 0.005), \label{eq:tiltL} \\
+  t_M(\lambda) &= -4.68 \times 10^{-5}\,\lambda + 0.169 \quad
+    (\mathrm{rms} = 0.006), \label{eq:tiltM}
+\end{align}
+where $\lambda$ is in nm and $t$ is the tilt in pixels per spatial pixel.
+The fit uses iterative 3$\sigma$ clipping and interpolates smoothly
+across the CO$_2$ fundamental absorption band near 4.2--4.5\,\um{} where
+tilt measurements are unreliable. The resulting tilt values are written
+into the \texttt{SlitPolyB} column of the tracing tables used for all
+subsequent reductions.
+
+\begin{table}
+\caption{Telluric standard stars used for slit tilt and wavelength
+  calibration.}
+\label{tab:tellstds}
+\centering
+\begin{tabular}{llll}
+\hline\hline
+Settings & Star & Sp.\ type & Slit \\
+\hline
+L3244--L3302, L3412, L3426 & $\alpha$\,Eri & B6\,V & 0\farcs2 \\
+L3340 & HD\,153426 & O9\,II & 0\farcs4 \\
+L3377 & $\theta$\,Aql & B9.5\,III & 0\farcs4 \\
+M4187, M4266 & HR\,7950 & B & 0\farcs2 \\
+M4211 & $o$\,Hya & B9\,III & 0\farcs2 \\
+M4318 & $\theta$\,Aql & B9.5\,III & 0\farcs4 \\
+M4368 & $\beta$\,Ori & B8\,Ia & 0\farcs2 \\
+M4416--M4504 & $\alpha$\,Eri & B6\,V & 0\farcs2 \\
+M4519 & V*\,S\,CrA & T\,Tauri & 0\farcs2 \\
+\hline
+\end{tabular}
+\tablefoot{All standards are hot stars with featureless L/M-band continua,
+  except M4519 where V*\,S\,CrA was the only available target; its
+  \vipere{} fits are adequate but noisier.}
+\end{table}
+
+
+%--------------------------------------------------------------------
+\subsection{Wavelength calibration}
+\label{sec:wavecal}
+
+The \vipere{} fits to the telluric standards also provide improved
+wavelength solutions. For traces where the fit converged well
+(percentage RMS residual $< 10$ and wavelength shift from the pipeline
+solution $< 10$\,\kms), the \vipere{} polynomial replaces the pipeline
+wavelength calibration in the tracing table. This applies to 225 out of
+311 traces (72\%). The remaining traces, typically at the longest M-band
+wavelengths where telluric features are weak or in the CO$_2$ gap, retain
+the pipeline wavelength solution.
+
+
+%--------------------------------------------------------------------
+\subsection{Science extraction}
+\label{sec:extraction}
+
+\crires{} exhibits mechanical flexure that shifts the spectral orders on
+the detector by typically 5--10 pixels between the daytime calibration
+and the nighttime science observation, occasionally reaching up to
+${\sim}50$ pixels. We correct for this by cross-correlating the spatial
+edge profile of each raw science frame against the order boundaries
+defined in the reference tracing table, measuring a global Y-shift that
+is applied to the trace polynomials before extraction.
+
+The adjusted tracing table, together with the nearest-in-time master flat
+and blaze function from 233 calibration epochs, forms the input to
+\esorex{} \texttt{cr2res\_obs\_nodding}, which performs optimal extraction
+of the A and B nod spectra.
+
+
+%--------------------------------------------------------------------
+\subsection{Telluric correction}
+\label{sec:tellcorr}
+
+Each extracted science spectrum is fitted with \vipere{}, which models
+the observed spectrum as a continuum polynomial multiplied by the
+convolved atmospheric transmission, accounting for H$_2$O, CO$_2$, CH$_4$,
+CO, O$_2$, and N$_2$O absorption. The telluric transmission model is
+reconstructed from the fit residuals as
+$T = (\mathrm{observed} - \mathrm{residual}) / C$, where $C$ is the
+fitted continuum. The corrected spectrum is then
+$S_\mathrm{corr} = S_\mathrm{obs} / T$.
+
+For orders where the \vipere{} fit fails (e.g.\ the CO$_2$-saturated
+region near 4.26\,\um), the original uncorrected spectrum is retained
+with the telluric transmission column set to NaN.
+
+Wavelengths in the output spectra are updated using the \vipere{} fit
+where available. For unfitted orders, wavelengths are interpolated using a
+2D polynomial surface fit (degree 2 in both pixel position and spectral
+order number) to the \vipere{} wavelengths of the fitted orders on the
+same chip.
+
+
+%--------------------------------------------------------------------
+\section{The archive}
+\label{sec:archive}
+
+The reduced spectra are served through a web application at
+\url{https://neon.physics.uu.se/crires-lm/}. The front page presents a
+filterable and sortable table of all observations for which telluric-corrected
+spectra are available, currently 3913 nod pairs. Users can filter by target
+name, wavelength setting, or ESO programme ID.
+
+Each observation page shows an interactive spectrum plot (using Plotly)
+displaying the telluric-corrected spectrum, the fitted telluric model, and
+the continuum, alongside diagnostic plots of the extraction and telluric
+fit quality. FITS files containing the corrected spectra are available for
+download; the output columns per spectral order include the corrected
+spectrum, error, wavelength, telluric transmission, and fitted continuum.
+
+Individual AB pair reductions are accessible alongside the combined
+template views. The full reduction code is available at
+\url{https://github.com/ivh/CRIRES-LM}.
+
+
+%--------------------------------------------------------------------
+\section{Summary}
+\label{sec:summary}
+
+We have reprocessed all 11\,131 public \crires{} L- and M-band science
+frames from the ESO archive into 5649 telluric-corrected nod-pair spectra
+covering 156 targets across 16 wavelength settings. The reprocessing
+includes slit tilt and wavelength calibration from telluric standard fits,
+per-observation flexure correction, and forward-model telluric correction.
+The resulting archive is browsable and downloadable at
+\url{https://neon.physics.uu.se/crires-lm/}.
+
+\begin{acknowledgements}
+Based on data obtained from the ESO Science Archive Facility under
+programmes listed at the archive URL. This work made use of the
+\crtwores{} pipeline \citep{cr2res} and the \vipere{} telluric fitting
+tool \citep{vipere}.
+\end{acknowledgements}
+
+
+%--------------------------------------------------------------------
+\bibliographystyle{aa}
+\bibliography{crires_lm}
+
+\end{document}
