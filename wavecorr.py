@@ -248,6 +248,9 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
 def process_dir(dir_path):
     dir_path = Path(dir_path).resolve()
 
+    for old_png in dir_path.glob('wavecorr_*.png'):
+        old_png.unlink()
+
     for ab in ['A', 'B']:
         tellcorr = dir_path / f'cr2res_obs_nodding_extracted{ab}_tellcorr.fits'
         pardat = dir_path / f'tellfit_{ab}.par.dat'
