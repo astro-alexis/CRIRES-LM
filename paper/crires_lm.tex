@@ -196,7 +196,20 @@ The fit uses iterative 3$\sigma$ clipping and interpolates smoothly
 across the CO$_2$ fundamental absorption band near 4.2--4.5\,\um{} where
 tilt measurements are unreliable. The resulting tilt values are written
 into the \texttt{SlitPolyB} column of the tracing tables used for all
-subsequent reductions.
+subsequent reductions (Fig.~\ref{fig:slittilt}).
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/slit_tilt.png}
+  \caption{Slit tilt measured from the A--B wavelength difference of
+    telluric standard stars, as a function of wavelength.  Different
+    symbols denote the three detector chips.  Solid and dashed lines show
+    the linear fits for L and M bands (Eqs.~\ref{eq:tiltL}
+    and~\ref{eq:tiltM}), which interpolate across the CO$_2$ gap near
+    4.2--4.5\,\um.  Grey points are 3$\sigma$ outliers excluded from the
+    fit.}
+  \label{fig:slittilt}
+\end{figure}
 
 \begin{table}
 \caption{Telluric standard stars used for slit tilt and wavelength
