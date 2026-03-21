@@ -114,6 +114,27 @@ def plot_velocity_correction(vipere_wl, pipeline_wl, vipere_prms, dv_coeffs,
     print(f"  Wrote {outpath}")
 
 
+def read_pipeline_wl_from_tw(tw_path, hdul):
+    """Read pipeline wavelengths from _tw.fits polynomials for all extracted orders."""
+    tw = fits.open(tw_path)
+    pixels = np.arange(2048, dtype=float)
+    pipeline_wl = {}
+    for chip in [1, 2, 3]:
+        ext = f'CHIP{chip}.INT1'
+        # which orders exist in the extracted spectrum
+        extracted_orders = set(
+            int(c.split('_')[0])
+            for c in hdul[ext].columns.names if c.endswith('_WL')
+        )
+        for row in tw[ext].data:
+            order = row['Order']
+            if order in extracted_orders:
+                wl = np.polyval(row['Wavelength'][::-1], pixels)
+                pipeline_wl[(chip, order)] = wl
+    tw.close()
+    return pipeline_wl
+
+
 def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
     """Update WL columns in a _tellcorr.fits."""
     hdul = fits.open(tellcorr_fits, mode='update')
@@ -154,14 +175,14 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
 
     pixels = np.arange(2048, dtype=float)
 
-    # read pipeline WL for all orders before any modification
-    pipeline_wl = {}
-    for chip in [1, 2, 3]:
-        ext = f'CHIP{chip}.INT1'
-        for col in hdul[ext].columns.names:
-            if col.endswith('_WL'):
-                order = int(col.split('_')[0])
-                pipeline_wl[(chip, order)] = hdul[ext].data[col].copy()
+    # read pipeline WL from _tw.fits (not from tellcorr, which may be stale)
+    dir_path = Path(tellcorr_fits).parent
+    tw_files = list(dir_path.glob('*_tw.fits'))
+    if not tw_files:
+        print("  No _tw.fits found, cannot determine pipeline WL")
+        hdul.close()
+        return
+    pipeline_wl = read_pipeline_wl_from_tw(tw_files[0], hdul)
 
     # compute vipere WL for all fitted orders
     vipere_wl = {}
