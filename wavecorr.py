@@ -194,14 +194,18 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
             vipere_wl[(chip, odrs)] = wl
             vipere_prms[(chip, odrs)] = prms
 
-    # apply direct vipere WL for fitted orders
+    # apply direct vipere WL for fitted orders with good prms
+    good_fitted = set()
     for (chip, odrs), wl in vipere_wl.items():
+        if vipere_prms.get((chip, odrs), 999) >= MAX_PRMS_FOR_CORRECTION:
+            continue
         wl_col = f"{odrs:02d}_01_WL"
         ext = f'CHIP{chip}.INT1'
         if wl_col in hdul[ext].columns.names:
             hdul[ext].data[wl_col] = wl
+            good_fitted.add((chip, odrs))
 
-    # identify unfitted orders across all chips
+    # identify unfitted orders across all chips (includes bad-prms vipere fits)
     all_unfitted = []
     for chip in [1, 2, 3]:
         ext = f'CHIP{chip}.INT1'
@@ -209,9 +213,8 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
             int(c.split('_')[0])
             for c in hdul[ext].columns.names if c.endswith('_SPEC')
         ))
-        fitted_set = set(s[0] for s in chip_solutions[chip])
         for odrs in orders_in_chip:
-            if odrs not in fitted_set:
+            if (chip, odrs) not in good_fitted:
                 all_unfitted.append((chip, odrs))
 
     n_fitted = len(vipere_wl)
