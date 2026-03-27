@@ -27,9 +27,9 @@
 
 <h2>Spectrum</h2>
 <div style="margin-bottom:0.25rem; display:flex; gap:1rem; align-items:center; font-size:0.85rem;">
-    <label><input type="checkbox" id="chk-a" checked onchange="toggleGroup('A', this.checked)"> Nod A</label>
-    <label><input type="checkbox" id="chk-b" onchange="toggleGroup('B', this.checked)"> Nod B</label>
-    <label><input type="checkbox" id="chk-model" checked onchange="toggleGroup('model', this.checked)"> Telluric</label>
+    <label><input type="checkbox" id="chk-a" checked onchange="toggleGroup()"> Nod A</label>
+    <label><input type="checkbox" id="chk-b" onchange="toggleGroup()"> Nod B</label>
+    <label><input type="checkbox" id="chk-model" checked onchange="toggleGroup()"> Telluric</label>
 </div>
 <div id="spectrum-plot" style="height:550px; display:flex; align-items:center; justify-content:center; color:#999;">Loading spectrum...</div>
 <script>
@@ -47,17 +47,22 @@
             }
         });
 
-    function toggleGroup(group, visible) {
+    function toggleGroup(group) {
         var el = document.getElementById('spectrum-plot');
         if (!el.data) return;
-        var indices = el.data.map(function(t, i) {
+        var chkA = document.getElementById('chk-a').checked;
+        var chkB = document.getElementById('chk-b').checked;
+        var chkM = document.getElementById('chk-model').checked;
+        el.data.forEach(function(t, i) {
             var lg = t.legendgroup || '';
-            if (group === 'A') return (lg.startsWith('A_') || lg === 'model') ? i : -1;
-            if (group === 'B') return (lg.startsWith('B_') || lg === 'model_b') ? i : -1;
-            if (group === 'model') return (lg === 'model' || lg === 'model_b') ? i : -1;
-            return -1;
-        }).filter(function(i) { return i >= 0; });
-        Plotly.restyle(el, {visible: visible}, indices);
+            var vis;
+            if (lg.startsWith('A_')) vis = chkA;
+            else if (lg.startsWith('B_')) vis = chkB;
+            else if (lg === 'model') vis = chkA && chkM;
+            else if (lg === 'model_b') vis = chkB && chkM;
+            else return;
+            Plotly.restyle(el, {visible: vis}, [i]);
+        });
     }
 </script>
 
