@@ -18,21 +18,61 @@
     </div>
 </form>
 
-<table>
+<table id="flats-table">
     <thead>
         <tr>
-            <th>Setting</th>
-            <th>Date</th>
+            <th data-sort="text">Setting</th>
+            <th data-sort="text">Date</th>
+            <th data-sort="text">Filter</th>
+            <th data-sort="num">DIT</th>
+            <th data-sort="num">NDIT</th>
+            <th data-sort="num">Frames</th>
+            <th data-sort="text">Programme</th>
         </tr>
     </thead>
     <tbody>
-        {% for d in flat_dirs %}
-        {% set parts = d.rsplit('_', 1) %}
+        {% for r in flat_rows %}
         <tr>
-            <td class="mono">{{ parts[0] }}</td>
-            <td class="mono"><a href="{{ base }}/flat/{{ d }}">{{ parts[1] }}</a></td>
+            <td class="mono"><a href="{{ base }}/flat/{{ r.dirname }}">{{ r.setting }}</a></td>
+            <td class="mono"><a href="{{ base }}/flat/{{ r.dirname }}">{{ r.date }}</a></td>
+            <td class="mono">{{ r.ins_filt1_name or '' }}</td>
+            <td class="mono">{{ ('%gs' % r.det_dit) if r.det_dit is not none else '' }}</td>
+            <td class="mono">{{ r.det_ndit if r.det_ndit is not none else '' }}</td>
+            <td>{{ r.n_frames }}</td>
+            <td class="mono">{% if r.prog_id %}<a href="https://archive.eso.org/wdb/wdb/eso/sched_rep_arc/query?progid={{ r.prog_id }}">{{ r.prog_id }}</a>{% endif %}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+<script>
+(function() {
+    var table = document.getElementById('flats-table');
+    if (!table) return;
+    var headers = table.querySelectorAll('th[data-sort]');
+    headers.forEach(function(th, colIdx) {
+        th.style.cursor = 'pointer';
+        th.style.userSelect = 'none';
+        th.addEventListener('click', function() {
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.rows);
+            var type = th.dataset.sort;
+            var asc = th.dataset.dir !== 'asc';
+            headers.forEach(function(h) { h.dataset.dir = ''; h.classList.remove('sort-asc', 'sort-desc'); });
+            th.dataset.dir = asc ? 'asc' : 'desc';
+            th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+            rows.sort(function(a, b) {
+                var av = a.cells[colIdx].textContent.trim();
+                var bv = b.cells[colIdx].textContent.trim();
+                if (type === 'num') {
+                    av = parseFloat(av) || 0;
+                    bv = parseFloat(bv) || 0;
+                    return asc ? av - bv : bv - av;
+                }
+                return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+            });
+            rows.forEach(function(r) { tbody.appendChild(r); });
+        });
+    });
+})();
+</script>
 {% endblock %}

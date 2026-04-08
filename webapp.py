@@ -444,8 +444,69 @@ def flat_index(request: Request, setting: str = Query(None)):
     if setting:
         flat_dirs = [d for d in flat_dirs if d.startswith(setting)]
     settings = sorted({d.rsplit("_", 1)[0] for d in flat_dirs})
+
+    # collect FLAT dp_ids per dir from SOF files
+    dir_dp_ids = {}
+    all_dp_ids = set()
+    for d in flat_dirs:
+        sof_file = FLATS / d / "flats.sof"
+        if not sof_file.exists():
+            continue
+        dps = []
+        for line in sof_file.read_text().splitlines():
+            if not line.strip():
+                continue
+            filename, tag = line.strip().rsplit(None, 1)
+            if tag == "FLAT":
+                dp_id = Path(filename).name.removesuffix(".fits")
+                dps.append(dp_id)
+                all_dp_ids.add(dp_id)
+        dir_dp_ids[d] = dps
+
+    # one query for all dp_ids
+    dp_info = {}
+    if all_dp_ids:
+        conn_flats = sqlite3.connect(BASE / "deep_flats.sqlite")
+        conn_flats.row_factory = sqlite3.Row
+        ids = list(all_dp_ids)
+        for i in range(0, len(ids), 500):
+            chunk = ids[i:i + 500]
+            placeholders = ",".join("?" * len(chunk))
+            rows = conn_flats.execute(
+                f"SELECT dp_id, det_dit, det_ndit, ins_filt1_name, prog_id, tpl_start "
+                f"FROM flats WHERE dp_id IN ({placeholders})",
+                chunk,
+            ).fetchall()
+            for r in rows:
+                dp_info[r["dp_id"]] = dict(r)
+        conn_flats.close()
+
+    rows = []
+    for d in flat_dirs:
+        parts = d.rsplit("_", 1)
+        row = {
+            "dirname": d,
+            "setting": parts[0] if len(parts) == 2 else d,
+            "date": parts[1] if len(parts) == 2 else "",
+            "n_frames": len(dir_dp_ids.get(d, [])),
+            "det_dit": None,
+            "det_ndit": None,
+            "ins_filt1_name": None,
+            "prog_id": None,
+        }
+        for dp_id in dir_dp_ids.get(d, []):
+            info = dp_info.get(dp_id)
+            if info:
+                row["det_dit"] = info["det_dit"]
+                row["det_ndit"] = info["det_ndit"]
+                row["ins_filt1_name"] = info["ins_filt1_name"]
+                row["prog_id"] = info["prog_id"]
+                break
+        rows.append(row)
+
     return templates.TemplateResponse(request, "flats_index.html", {
         "flat_dirs": flat_dirs,
+        "flat_rows": rows,
         "settings": settings,
         "sel_setting": setting,
     })
