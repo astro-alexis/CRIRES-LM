@@ -283,22 +283,53 @@ Later updated by picking the median of all interpolated solutions.
 \subsection{Calibrations, flats are all you need}
 \label{sec:flats}
 
-We intentionally omitted the many of the calibrations that are part of
-the standard reductions and would in principle be av
 
-The flat-fields are however essential for several reasons. Data with good
-SNR ..
-blaze for easier telluric fits
-bpm
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/flat_comparison.pdf}
+  \caption{Extracted spectrum of $\beta$\,Pic in the M4368 setting
+    (order~7, all three detector chips), reduced with flat-fielding (blue)
+    and without (red).  The black lines show the corresponding
+    \viper{} telluric model for each case. }
+  \label{fig:flatcomp}
+\end{figure}
+
+Since there are no wavelength calibration lamp sources, and the detector
+background gets subtracted together with the sky when we subtract
+ the nodding A and B frames from each other, there only remain the
+ flat-fields to be reduced and applied.
+These are however essential for several reasons. Data with good
+SNR needs flat-fields of matching depth to achieve the expected noise levels, as 
+Fig.~\ref{fig:flatcomp} clearly illustrates by showing a spectrum before and after
+flat-fielding. 
 
 The \crires\ team takes deep flat-fields with high NDIT (20, 50 or 100)
-from time to time. We downloaded these sets for all the L/M settings
-and reduced them with \texttt{cr2res\_cal\_flat}, passing the updated
-slit
+from time to time. In order to never limit the science products' SNR, we
+downloaded these these sets of flat-fields (not the daily flats) for all the L/M settings.
+We then reduced them with \texttt{cr2res\_cal\_flat}, passing the updated
+slit tilt information as input. The nearest-in-time set
+of flats we associate to each observation set, and prepare the set-of-files (SOF) for the
+science reduction accordingly.
 
+In addtion, we pass the blaze function that \texttt{cr2res\_cal\_flat} prodoces
+on to the science recipe. This does not fully normalize the continuum but 
+generall straightens it enough to make it easier for \viper\ to do its fit. Lastly,
+outliers in the flat-field, with normalized senitivity below 0.8 or above 1.2, get flaggged
+as bad, thus providing the bad pixel map (BPM) for the science reduction.
 
-
-
+Even though the HAWAII2RG detectors are known to have a non-linear
+response starting below 10\,000 ADU ($\approx $ 20\,000 electrons), we did not
+apply the instrument's standard non-linearity calibration, for two reasons. First, since
+\crires\ cannot illuminate its detectors fully and evenly, the calibration is taken
+with a large number of flat-field frames, and still does not reach high SNR, leaving
+a risk to degrade data quality. Second, except for very bright targets,
+the exposure times  in L and M are limited by the high sky background, that 
+gets removed by the subtraction the nodding A and B frames from each other.
+Thus, the exposure level of continuum and the trough of spectral lines usually
+only corresponds only to a small fraction of the full dynamic range of the detectors.
+Nevertheless, we encourage users that intend to, for example, analyse the line shapes
+of the strongest spectral features in the brightest of targets, to look into
+applying an average non-linearity correction themselves.
 
 %--------------------------------------------------------------------
 \subsection{Science extraction}
@@ -563,12 +594,22 @@ CO 4.7 micron ro-vibrational lines in transition disks.
 \url{https://www.astro.uu.se/crires-lm/obs/MWC_758_M4368_2024-12-31_02310}
 same here, also cool Br-alpha
 \url{https://www.astro.uu.se/crires-lm/obs/V_VW_Cha_M4368_2023-04-28_00032}
+\url{https://www.astro.uu.se/crires-lm/obs/V_GQ_Lup_M4368_2024-03-16_09003}
 
 Br-alpha in B-supergiant
 \url{https://www.astro.uu.se/crires-lm/obs/bet_Ori_M4368_2024-12-09_02033}
 
 cool emission feature at 3542 (also Br-alpha)
 \url{https://www.astro.uu.se/crires-lm/obs/IRAS_18576+0341_L3340_2022-08-09_04324?variant=noflat}
+
+winds? order 6 in 
+\url{https://www.astro.uu.se/crires-lm/obs/V_GQ_Lup_M4368_2024-03-16_09003}
+
+what's that at 3690? in
+\url{https://www.astro.uu.se/crires-lm/obs/ome_Car_L3262_2023-12-24_07335}
+
+CO in red supergiant
+\url{https://www.astro.uu.se/crires-lm/obs/WRAY_15-1676_M4318_2021-09-15_23331}
 
 %--------------------------------------------------------------------
 \section{Summary}
@@ -588,6 +629,9 @@ replacements for other data reductions, and have been offered to ESO in the
 hope that they will ship with the next release of the cr2res pipeline. 
 
 \begin{acknowledgements}
+We thank N.~Piskunov for early feedback on this project and the draft text; and for
+his leading role in the \crires\ project and its data reduction pipeline.
+
 Based on observations made with ESO Telescopes at the La Silla Paranal Observatory under programme ID(s)
 60.A-9801(B),
 107.22SP.001,

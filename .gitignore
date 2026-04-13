@@ -21,6 +21,7 @@ flats/raw/
 
 # Reduced data products (huge, regenerable)
 reduced/
+reduced_noflat/
 
 # Python
 __pycache__/
