@@ -28,12 +28,12 @@
 \titlerunning{CRIRES$^+$ L/M-band spectral archive}
 
 \author{Thomas Marquart\inst{1}\email{thomas.marquart@astro.uu.se}\,\orcidlink{0000-0002-2244-9920}
-\and	Alexis Lavail\inst{2}\,\orcidlink{0000-000}}
+\and	Alexis Lavail\inst{2}\,\orcidlink{0000-000}} % TODO
 \authorrunning{T.\ Marquart \& A. Lavail}
 
 \institute{Department of Physics and Astronomy, Uppsala University,
   Box 516, SE-75120 Uppsala, Sweden
- \and toulouse}
+ \and toulouse} % TODO
 
 \date{March 2026}
 
@@ -87,7 +87,9 @@ of $2048 \times 2048$ pixels each with 5--9 echelle orders per chip.
 While the near-infrared ($YJHK$) modes of \crires{} are fully reduced and calibrated by
 the standard \crtwores{} pipeline \citep{cr2res} and included in ESO's
 Phase~3 data releases, the thermal infrared L-band (2.8--4.2\,\um) and
-M-band (4.4--5.5\,\um) settings have only the flat-field calibration lamp
+M-band (4.4--5.5\,\um)\footnote{The M-band settings have wavelength coverage
+ well into the L-band, as can be seen in Fig.~\ref{fig:slittilt}.}
+ settings have only the flat-field calibration lamp
 available.
 
 Therefore, two instrument properties cannot be calibrated in
@@ -111,12 +113,12 @@ and highlight some examples.
 
 
 %--------------------------------------------------------------------
-\section{Data \& Methods}
+\section{Data,  Methods \& Results}
 \label{sec:data-methods}
 
 We query the ESO archive for all \crires{} science frames with
 wavelength settings in the L- and M-bands, covering the period from
-September 2021 (first \crires{} science operations) through January 2025.
+September 2021 (first \crires{} science operations) through March 2025.
 This yields 11\,131 raw frames from 68 programmes observing 156 distinct
 targets across 16 wavelength settings (Table~\ref{tab:settings}).
 
@@ -325,7 +327,7 @@ a risk to degrade data quality. Second, except for very bright targets
 the exposure times  in L and M are limited by the high sky background, that 
 gets removed by the subtraction the nodding A and B frames from each other.
 Thus, the exposure level of continuum and the trough of spectral lines usually
-only corresponds only to a small fraction of the full dynamic range of the detectors.
+corresponds only to a small fraction of the full dynamic range of the detectors.
 Nevertheless, we encourage users that intend to, for example, analyse the line shapes
 of the strongest spectral features in the brightest of targets, to look into
 applying an average non-linearity correction themselves.
@@ -483,14 +485,14 @@ larger scatter.
 As an independent validation of the slit tilt calibration, we compare the
 measured A--B wavelength shifts to the predictions from the
 \texttt{SlitPolyB} tilt coefficients stored in the tracing tables.  For
-each observation the predicted shift is $\Delta\lambda = t \cdot
+each observation the predicted velocity shift is $\Delta v = t \cdot
 \Delta{}y \cdot (\mathrm{d}\lambda/\mathrm{d}x) / \lambda \cdot c$,
-where $t$ is the tilt (from the linear fit described in
-Sect.~\ref{sec:tilt}), $\Delta{}y$ the nod throw in pixels (read from
-the \texttt{ESO SEQ NODTHROW} header of each observation and converted
-via the 0\farcs059\,pixel$^{-1}$ plate scale), and
-$\mathrm{d}\lambda/\mathrm{d}x$ the local dispersion from the tracing
-table wavelength polynomial.  Across 209 (setting, chip, order) groups
+where $t$ is the tilt in pixels per spatial pixel (from the linear fit described in
+Sect.~\ref{sec:tilt}), $\Delta{}y$ the nod throw in pixels (from
+the \texttt{ESO SEQ NODTHROW} header converted
+via the 0\farcs059\,pixel$^{-1}$ plate scale),
+$\mathrm{d}\lambda/\mathrm{d}x$ the local dispersion, and $\lambda$ the
+wavelength, both from the tracing table polynomial.  Across 209 (setting, chip, order) groups
 the residuals between the measured and predicted A--B shifts have an RMS
 of 696\,m\,s$^{-1}$ and a median offset of only 22\,m\,s$^{-1}$
 (Fig.~\ref{fig:tiltcomp}), confirming that the linear tilt model
@@ -549,7 +551,7 @@ future reductions of data in these wavelength settings.
 
 
 %--------------------------------------------------------------------
-\section{Caveats}
+\subsection{Caveats}
 \label{sec:caveats}
 
 We believe this data release is a significant improvement over what
@@ -573,10 +575,10 @@ pulled to match part of the line. This is generally quite obvious from the tellu
 residuals, and needs to be remedied by re-fitting the continuum without
 the spectral feature.
 
-As mentioned above (\ref{sec:extraction}),
+As mentioned above (\S \ref{sec:extraction}),
  data taken without metrology can be partially cut-off by the flat-field.
  
-No non-linearity correction was applied to the spectra, cf.~\ref{sec:calibs}.
+No non-linearity correction was applied to the spectra, cf.~\S \ref{sec:calibs}.
 
 %--------------------------------------------------------------------
 \section{The data archive website and code repository}
@@ -585,7 +587,7 @@ No non-linearity correction was applied to the spectra, cf.~\ref{sec:calibs}.
 The reduced spectra are served through a web application at
 \url{https://www.astro.uu.se/crires-lm/}. The front page presents a
 filterable and sortable table of all observations for which telluric-corrected
-spectra are available, currently 3913 nod pairs. Users can filter by target
+spectra are available, covering all 5649 nod pairs. Users can filter by target
 name, wavelength setting, or ESO programme ID.
 
 Each observation page shows an interactive spectrum plot (using Plotly)
@@ -598,7 +600,7 @@ several static plots that allow a quick first assessment of the data:
 \end{itemize}
 
 
-FITS files are availabel for download, containing the corrected spectra;
+FITS files are available for download, containing the corrected spectra;
  the output columns per spectral order include the corrected
 spectrum, error, wavelength, telluric transmission, and fitted continuum.
 All information needed to reconstruct the
@@ -641,10 +643,10 @@ guidance, Claude Code wrote and executed the scripts that carry out the aforemen
 \item measure the slit tilt from the telluric stars' A-B difference
 \item find the best shift in Y for the trace polynomials
 \item orchestrate the parallel runs of 10,000 pipeline reductions
-\item install and run \emph{molecfit} to generate the input atmoshpheric model for \viper
+\item install and run \emph{molecfit} to generate the input atmospheric model for \viper
 \item carry out the telluric fits with vipere and plot the results
 \item aggregate the telluric fit results from all data to verify the slit tilt
-\item analyze wavelength accuracy from aggregate the telluric fits
+\item analyze the wavelength precision by comparing the the telluric fits from all observations
 \end{itemize}
 
 In addition, the web-application that runs the data archive is entirely 
@@ -666,7 +668,7 @@ The purpose of this work is not to analyze the improved spectra for scientific r
 but to enable other researchers with the necessary expertise to easier exploit
 these hitherto neglected observations.
 
-Nevertheless, here are a few examples of what cought our eye when browsing the
+Nevertheless, here are a few examples of what caught our eye when browsing the
 data.
 
 CO 4.7 micron ro-vibrational lines in transition disks.
