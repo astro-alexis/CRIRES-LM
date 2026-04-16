@@ -61,5 +61,5 @@ Raw data, reduced products, and FITS outputs are not included (too large); they 
 ## Requirements
 
 - [ESO esorex](https://www.eso.org/sci/software/cpl/esorex.html) with the `cr2res` pipeline
-- [vipere](https://git.astro.lavail.net/alexis/vipere) (with L/M band atmospheric models)
+- [vipere](https://git.astro.lavail.net/alexis/vipere) with L/M band atmospheric models ([stdAtmos_L.fits](https://neon.physics.uu.se/crires/stdAtmos_L.fits), [stdAtmos_M.fits](https://neon.physics.uu.se/crires/stdAtmos_M.fits)) placed in `vipere/lib/atmos/`
 - Python 3.10+, managed via [uv](https://github.com/astral-sh/uv); all scripts have [PEP 723](https://peps.python.org/pep-0723/) inline metadata so `uv run script.py` pulls in the right dependencies automatically
