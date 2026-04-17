@@ -582,6 +582,41 @@ As mentioned above (\S \ref{sec:extraction}),
 No non-linearity correction was applied to the spectra, cf.~\S \ref{sec:calibs}.
 
 %--------------------------------------------------------------------
+\subsection{Use of AI tools}
+\label{sec:ai}
+
+Claude Opus 4.6 \citep{claude_opus46} has been used extensively in this project
+which would not have happened without it, since it turned this work into a matter of days rather than weeks.
+
+Under supervised
+guidance, Claude Code wrote and executed the scripts that carry out the aforementioned steps:
+\begin{itemize}
+\item query the ESO archive for all LM data and build a local SQLite database with meta-information
+\item retrieve the data from the ESO archive
+\item group data by nodding AB pairs and associate the nearest flat-field
+\item generate the SOF with filenames and tags for the cr2res recipes
+\item measure the slit tilt from the telluric stars' A-B difference
+\item find the best shift in Y for the trace polynomials
+\item orchestrate the parallel runs of 10,000 pipeline reductions
+\item install and run \emph{molecfit} to generate the input atmospheric model for \viper
+\item carry out the telluric fits with vipere and plot the results
+\item aggregate the telluric fit results from all data to verify the slit tilt
+\item analyze the wavelength precision by comparing the the telluric fits from all observations
+\end{itemize}
+
+In addition, the web-application that runs the data archive is entirely 
+AI-generated.
+
+The authors are confident in the methodological correctness of the applied
+concepts and when inspecting the code find no reason to doubt
+the results.
+
+The first draft of some sections of this paper was also written in collaboration with Claude, often
+as the summary of the analysis session that produced the results.
+The text was then edited and checked for correctness by the authors.
+
+
+%--------------------------------------------------------------------
 \section{The data archive website and code repository}
 \label{sec:archive}
 
@@ -618,9 +653,12 @@ reduction, which shows the normalized flat-field, the blaze functions and meta-d
 Lastly, a table lists all raw frames that went into the data presented at the current page.
 Clicking on an individual AB pair leads to the reduction page for that specific AB pair alone.
 
-The full reduction code, scripts, static input data, and the webapp is available from 
+The full reduction code, scripts, static input data, recipe parameter files, and the webapp is available from 
 the repository at 
-\url{https://github.com/ivh/CRIRES-LM}.
+\url{https://github.com/ivh/CRIRES-LM}. Reproducing this work should be as
+straight-forward as re-running the download and reduction scripts in the documented
+order. On a machine with 32 cores, using GNU \texttt{parallel} \citep{tange_parallel}, this takes
+on the order of a day.
 
 Also in the repository, there are the updated trace table files
 (\texttt{*\_tw.fits}) with cleaned up traces, slit tilt and good default
@@ -633,39 +671,6 @@ easy future updates, both in terms of adding data as more becomes
 public, and in terms of code and methods for when further improvements
 are found. The repository has a \emph{git tag} matching the arXiv-version of
 this paper, and we will add a change-log here for versions after this initial.
-
-
-%--------------------------------------------------------------------
-\section{Use of AI tools}
-\label{sec:ai}
-
-Claude Opus 4.6 \citep{claude_opus46} has been used extensively in this project
-and it would not have been possible without it. Through careful and supervised
-guidance, Claude Code wrote and executed the scripts that carry out the aforementioned steps:
-\begin{itemize}
-\item query the ESO archive for all LM data and build a local SQLite database with meta-information
-\item retrieve the data from the ESO archive
-\item group data by nodding AB pairs and associate the nearest flat-field
-\item generate the SOF with filenames and tags for the cr2res recipes
-\item measure the slit tilt from the telluric stars' A-B difference
-\item find the best shift in Y for the trace polynomials
-\item orchestrate the parallel runs of 10,000 pipeline reductions
-\item install and run \emph{molecfit} to generate the input atmospheric model for \viper
-\item carry out the telluric fits with vipere and plot the results
-\item aggregate the telluric fit results from all data to verify the slit tilt
-\item analyze the wavelength precision by comparing the the telluric fits from all observations
-\end{itemize}
-
-In addition, the web-application that runs the data archive is entirely 
-AI-generated.
-
-The authors are confident in the methodological correctness of the applied
-concepts and when inspecting the code find no reason to doubt
-the results.
-
-The first draft of some sections of this paper was also written in collaboration with Claude, often
-as the summary of the analysis session that produced the results.
-The text was then edited and checked for correctness by the authors.
 
 %--------------------------------------------------------------------
 \section{Showcase examples}
