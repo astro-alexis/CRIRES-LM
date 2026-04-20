@@ -250,6 +250,15 @@ def plot_comparison(ab_medians, tw_predictions):
     L = wls < 4200
     M = ~L
 
+    plt.rcParams.update({
+        'font.size': 13,
+        'axes.titlesize': 14,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 12,
+        'ytick.labelsize': 12,
+        'legend.fontsize': 11,
+    })
+
     fig, ax = plt.subplots(figsize=(7, 4))
     if L.any():
         ax.scatter(wls[L], resid[L], c='C0', s=30, alpha=0.7,
@@ -262,7 +271,7 @@ def plot_comparison(ab_medians, tw_predictions):
     ax.set_ylabel('measured - predicted A-B shift [m/s]')
     ax.set_title(f'Slit tilt validation ({len(keys)} groups, '
                  f'RMS={rms:.0f} m/s, median={np.median(resid):.0f} m/s)')
-    ax.legend(fontsize=8)
+    ax.legend()
 
     fig.tight_layout()
     fig.savefig('tilt_comparison.png', dpi=150, bbox_inches='tight')

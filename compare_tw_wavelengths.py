@@ -181,6 +181,15 @@ def main():
     chip_colors = {1: 'C0', 2: 'C1', 3: 'C2'}
     all_fits = {}
 
+    plt.rcParams.update({
+        'font.size': 13,
+        'axes.titlesize': 14,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 12,
+        'ytick.labelsize': 12,
+        'legend.fontsize': 11,
+    })
+
     for setting in settings:
         tw = read_tw(setting)
         if not tw:
@@ -299,7 +308,7 @@ def main():
                       f"NO DATA (n={n_raw})")
 
         # plot
-        fig, ax = plt.subplots(figsize=(13, 5))
+        fig, ax = plt.subplots(figsize=(7, 2.7))
         chip_plotted = {}
         labeled_orders = set()
 
@@ -327,7 +336,7 @@ def main():
                 mid = len(t['wl_curve']) // 2
                 ax.annotate(
                     f"o{t['order']}", xy=(t['wl_curve'][mid], t['offset_curve'][mid]),
-                    fontsize=7, ha='center', va='bottom', color='k', alpha=0.7,
+                    fontsize=10, ha='center', va='bottom', color='k', alpha=0.7,
                     xytext=(0, 3), textcoords='offset points')
                 labeled_orders.add(t['order'])
 
@@ -337,7 +346,7 @@ def main():
                 mid = len(t['wl_curve']) // 2
                 ax.annotate(
                     f"o{t['order']}", xy=(t['wl_curve'][mid], t['offset_curve'][mid]),
-                    fontsize=7, ha='center', va='bottom', color='k', alpha=0.7,
+                    fontsize=10, ha='center', va='bottom', color='k', alpha=0.7,
                     xytext=(0, 3), textcoords='offset points')
                 labeled_orders.add(t['order'])
 
@@ -360,7 +369,7 @@ def main():
         fit_handle, = ax.plot([], [], 'r-', lw=1.5, label='linear fit')
         handles += [pipe_line, vipe_line, fit_handle]
         labels += ['pipeline WL in _tw', 'vipere WL in _tw', 'linear fit']
-        ax.legend(handles, labels, fontsize=8, loc='best')
+        ax.legend(handles, labels, loc='best')
 
         ax.set_xlabel('wavelength (nm)')
         ax.set_ylabel('offset: _tw.fits - science median (km/s)')

@@ -370,7 +370,16 @@ def analyze_ab_diffs(ab_diffs):
 def plot_results(abs_data, chip_rms, order_rms, ab_rms):
     wl_centers, abs_rms_arr, abs_mad, abs_counts, abs_labels = abs_data
 
-    fig, axes = plt.subplots(2, 3, figsize=(18, 9))
+    plt.rcParams.update({
+        'font.size': 13,
+        'axes.titlesize': 14,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 12,
+        'ytick.labelsize': 12,
+        'legend.fontsize': 11,
+    })
+
+    fig, axes = plt.subplots(2, 3, figsize=(14, 7))
 
     # 1. Absolute scatter vs wavelength
     ax = axes[0, 0]
@@ -389,7 +398,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
     ax.set_xlabel('wavelength [nm]')
     ax.set_ylabel('RMS scatter [m/s]')
     ax.set_title('Absolute wavelength repeatability')
-    ax.legend(fontsize=8)
+    ax.legend()
 
     # 2. Histogram of absolute scatter (good groups only)
     ax = axes[0, 1]
@@ -405,7 +414,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
         ax.set_title('Absolute scatter distribution (< 5 km/s)')
-        ax.legend(fontsize=8)
+        ax.legend()
 
     # 3. A-B scatter distribution
     ax = axes[0, 2]
@@ -418,7 +427,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
         ax.set_title(f'A-B difference scatter ({ok.sum()}/{len(ab_rms)} groups < 5 km/s)')
-        ax.legend(fontsize=8)
+        ax.legend()
 
     # 4. Inter-chip gap scatter distribution
     ax = axes[1, 0]
@@ -431,7 +440,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
         ax.set_title(f'Inter-chip gap scatter ({ok.sum()}/{len(chip_rms)} groups < 5 km/s)')
-        ax.legend(fontsize=8)
+        ax.legend()
 
     # 5. Inter-order gap scatter distribution
     ax = axes[1, 1]
@@ -444,7 +453,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
         ax.set_title(f'Inter-order gap scatter ({ok.sum()}/{len(order_rms)} groups < 5 km/s)')
-        ax.legend(fontsize=8)
+        ax.legend()
 
     # 6. Combined comparison: CDF of all four metrics
     ax = axes[1, 2]
@@ -462,7 +471,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
     ax.set_xlabel('RMS scatter [m/s]')
     ax.set_ylabel('cumulative fraction')
     ax.set_title('CDF of per-group RMS (all metrics)')
-    ax.legend(fontsize=8)
+    ax.legend()
     ax.set_xlim(0, 5000)
 
     fig.tight_layout()

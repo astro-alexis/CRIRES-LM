@@ -465,16 +465,16 @@ wavelength difference at a given pixel should be constant (reflecting the
 slit tilt) with scatter determined only by fit noise.
 
 We evaluate the wavelength at detector centre (pixel~1024) for each
-fitted segment in all 4067 science observations with at least one order
+fitted segment in all 4068 science observations with at least one order
 passing the quality filter ($\mathrm{prms} < 10$), and compute the
 deviation of each measurement from the median across all observations of
 the same wavelength setting, chip, and order. The A--B comparison yields
-the tightest constraint, with a median per-group RMS of 249\,m\,s$^{-1}$
-across 213 well-behaved groups. Since each A--B difference combines the
+the tightest constraint, with a median per-group RMS of 253\,m\,s$^{-1}$
+across 218 well-behaved groups. Since each A--B difference combines the
 noise of two independent fits, the implied single-fit precision is
-$249 / \sqrt{2} \approx 176$\,m\,s$^{-1}$.  The inter-chip and
-inter-order gap metrics give median RMS values of 290 and
-658\,m\,s$^{-1}$, respectively, while the absolute wavelength
+$253 / \sqrt{2} \approx 179$\,m\,s$^{-1}$.  The inter-chip and
+inter-order gap metrics give median RMS values of 292 and
+659\,m\,s$^{-1}$, respectively, while the absolute wavelength
 repeatability (which additionally includes real observation-to-observation
 variations from atmospheric and instrumental changes) has a median RMS of
 ${\sim}2.2$\,\kms. These results apply to orders with sufficient telluric
@@ -493,12 +493,11 @@ Sect.~\ref{sec:tilt}), $\Delta{}y$ the nod throw in pixels (from
 the \texttt{ESO SEQ NODTHROW} header converted
 via the 0\farcs059\,pixel$^{-1}$ plate scale),
 $\mathrm{d}\lambda/\mathrm{d}x$ the local dispersion, and $\lambda$ the
-wavelength, both from the tracing table polynomial.  Across 209 (setting, chip, order) groups
+wavelength, both from the tracing table polynomial.  Across 212 (setting, chip, order) groups
 the residuals between the measured and predicted A--B shifts have an RMS
-of 696\,m\,s$^{-1}$ and a median offset of only 22\,m\,s$^{-1}$
-(Fig.~\ref{fig:tiltcomp}), confirming that the linear tilt model
-captures the dominant slit geometry to within the single-fit wavelength
-precision.
+of 1177\,m\,s$^{-1}$ and a median offset of only 40\,m\,s$^{-1}$
+(Fig.~\ref{fig:tiltcomp}), perfectly in line with a correctly measured
+tilt.
 
 \begin{figure}
   \centering
@@ -506,10 +505,9 @@ precision.
   \caption{Residual between the measured median A--B wavelength shift and
     the shift predicted by the slit tilt model, as a function of
     wavelength.  Blue and red points denote L- and M-band groups,
-    respectively.  The RMS residual of 696\,m\,s$^{-1}$ is consistent
-    with the single-fit wavelength precision of ${\sim}176$\,m\,s$^{-1}$
-    (each A--B difference combines two fits) and the observation-to-observation
-    scatter in nod throw and atmospheric conditions.}
+    respectively.  The RMS residual of 1177\,m\,s$^{-1}$ and median
+    offset of 40\,m\,s$^{-1}$ are consistent with a correctly measured
+    tilt.}
   \label{fig:tiltcomp}
 \end{figure}
 
