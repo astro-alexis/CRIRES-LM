@@ -11,6 +11,7 @@ with each (chip, order) trace as a short curve segment.
 
 import json
 import re
+import shutil
 from collections import defaultdict
 from pathlib import Path
 
@@ -152,7 +153,7 @@ def collect_science_polys(reduced_dir, prms_max=10):
 
 
 def read_tw(setting):
-    tw_path = Path(f'{setting}_tw.fits')
+    tw_path = Path(f'tw_comp/{setting}_tw.fits')
     if not tw_path.exists():
         return {}
     result = {}
@@ -180,6 +181,15 @@ def main():
     pixels = np.linspace(0, 2047, 200)
     chip_colors = {1: 'C0', 2: 'C1', 3: 'C2'}
     all_fits = {}
+
+    plt.rcParams.update({
+        'font.size': 13,
+        'axes.titlesize': 14,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 12,
+        'ytick.labelsize': 12,
+        'legend.fontsize': 11,
+    })
 
     for setting in settings:
         tw = read_tw(setting)
@@ -299,14 +309,14 @@ def main():
                       f"NO DATA (n={n_raw})")
 
         # plot
-        fig, ax = plt.subplots(figsize=(13, 5))
+        fig, ax = plt.subplots(figsize=(7, 2.7))
         chip_plotted = {}
         labeled_orders = set()
 
         for t in traces:
             chip = t['chip']
             color = chip_colors[chip]
-            ls = '--' if t['pipeline'] else '-'
+            ls = ':' if t['pipeline'] else '-'
             lw = 2.0 if t['pipeline'] else 1.2
 
             if chip not in chip_plotted:
@@ -327,7 +337,7 @@ def main():
                 mid = len(t['wl_curve']) // 2
                 ax.annotate(
                     f"o{t['order']}", xy=(t['wl_curve'][mid], t['offset_curve'][mid]),
-                    fontsize=7, ha='center', va='bottom', color='k', alpha=0.7,
+                    fontsize=10, ha='center', va='bottom', color='k', alpha=0.7,
                     xytext=(0, 3), textcoords='offset points')
                 labeled_orders.add(t['order'])
 
@@ -337,7 +347,7 @@ def main():
                 mid = len(t['wl_curve']) // 2
                 ax.annotate(
                     f"o{t['order']}", xy=(t['wl_curve'][mid], t['offset_curve'][mid]),
-                    fontsize=7, ha='center', va='bottom', color='k', alpha=0.7,
+                    fontsize=10, ha='center', va='bottom', color='k', alpha=0.7,
                     xytext=(0, 3), textcoords='offset points')
                 labeled_orders.add(t['order'])
 
@@ -352,18 +362,8 @@ def main():
         ax.axhline(3, color='gray', lw=0.5, ls=':', alpha=0.5)
         ax.axhline(-3, color='gray', lw=0.5, ls=':', alpha=0.5)
 
-        # legend: chips + pipeline marker
-        handles = [chip_plotted[c] for c in sorted(chip_plotted)]
-        labels = [f'CHIP{c}' for c in sorted(chip_plotted)]
-        pipe_line, = ax.plot([], [], 'k--', lw=2, label='pipeline WL in _tw')
-        vipe_line, = ax.plot([], [], 'k-', lw=1.2, label='vipere WL in _tw')
-        fit_handle, = ax.plot([], [], 'r-', lw=1.5, label='linear fit')
-        handles += [pipe_line, vipe_line, fit_handle]
-        labels += ['pipeline WL in _tw', 'vipere WL in _tw', 'linear fit']
-        ax.legend(handles, labels, fontsize=8, loc='best')
-
         ax.set_xlabel('wavelength (nm)')
-        ax.set_ylabel('offset: _tw.fits - science median (km/s)')
+        ax.set_ylabel(r'$\Delta v$ (km/s)')
         ax.set_title(f'{setting}: _tw.fits vs aggregate science wavelength')
 
         fig.tight_layout()
@@ -382,10 +382,14 @@ def main():
             print(f"  {setting}: SKIPPED (no fit)")
             continue
         a, b = f['intercept'], f['slope']
-        tw_path = Path(f'{setting}_tw.fits')
-        if not tw_path.exists():
+        src_path = Path(f'tw_comp/{setting}_tw.fits')
+        dst_path = Path(f'{setting}_tw.fits')
+        if not src_path.exists():
             continue
-        with fits.open(tw_path, mode='update') as hdul:
+        # always read from the pre-correction baseline in tw_comp/ and write
+        # the corrected result to cwd — script is idempotent
+        shutil.copyfile(src_path, dst_path)
+        with fits.open(dst_path, mode='update') as hdul:
             for chip in [1, 2, 3]:
                 ext = f'CHIP{chip}.INT1'
                 if ext not in hdul:
@@ -400,7 +404,7 @@ def main():
                           f"dv={dv:+.2f} km/s  "
                           f"wl@1024: {wl_old:.4f} -> {wl_new:.4f} nm")
                     row['Wavelength'][:] = [c0n, c1n, c2n]
-        print(f"  -> {tw_path} updated\n")
+        print(f"  -> {dst_path} updated\n")
 
     # --- paper figure: all fits in one panel ---
     fig, ax = plt.subplots(figsize=(7, 3.5))
