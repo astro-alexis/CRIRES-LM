@@ -69,4 +69,5 @@ ax.legend(fontsize=7, loc='lower left', ncol=2)
 fig.tight_layout()
 outpath = BASE.parent / 'paper' / 'figs' / 'slit_tilt.png'
 fig.savefig(outpath, dpi=150, bbox_inches='tight')
+fig.savefig(outpath.with_suffix('.pdf'), bbox_inches='tight')
 print(f'Saved {outpath}')

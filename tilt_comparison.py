@@ -275,6 +275,7 @@ def plot_comparison(ab_medians, tw_predictions):
 
     fig.tight_layout()
     fig.savefig('tilt_comparison.png', dpi=150, bbox_inches='tight')
+    fig.savefig('tilt_comparison.pdf', bbox_inches='tight')
     plt.close(fig)
 
     print(f"\n{'='*70}")

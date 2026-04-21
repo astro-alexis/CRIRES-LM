@@ -369,6 +369,7 @@ def main():
         fig.tight_layout()
         outfile = f'tw_comparison_{setting}.png'
         fig.savefig(outfile, dpi=150, bbox_inches='tight')
+        fig.savefig(outfile.replace('.png', '.pdf'), bbox_inches='tight')
         plt.close(fig)
         print(f"  -> {outfile}\n")
 

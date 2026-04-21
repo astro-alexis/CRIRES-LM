@@ -476,6 +476,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
 
     fig.tight_layout()
     fig.savefig('wavelength_precision.png', dpi=150, bbox_inches='tight')
+    fig.savefig('wavelength_precision.pdf', bbox_inches='tight')
     plt.close(fig)
     print(f"\nWrote wavelength_precision.png")
 
