@@ -271,13 +271,13 @@ order already captures the bulk of the improvement over previous
 \subsection{Better default wavelengths}
 \label{sec:defaultwave}
 
-The \vipere{} fits to the telluric standards also give
+The \vipere{} fits to the telluric standards produce
 wavelength solutions. For traces where the fit converged well
 (percentage RMS residual $< 10$ and wavelength shift from the pipeline
-solution $< 10$\,\kms), we let the \vipere{} polynomial replace old static
+solution $< 10$\,\kms), we let the \vipere{} polynomial replace the old static
  calibration in the tracing table. This applies to 225 out of
 311 traces (72\%). The remaining traces, typically at the longest M-band
-wavelengths where telluric features are weak or in the CO$_2$ gap, retain
+wavelengths where telluric features are weak or in the CO$_2$ gap, we retain
 the pipeline wavelength solution until later.
 
 At this stage, we also removed some redundant duplicate traces, and partial ones
@@ -293,7 +293,7 @@ that were cut at the detector edges from the trace table files (\texttt{*\_tw.fi
   \includegraphics[width=\columnwidth]{figs/flat_comparison.pdf}
   \caption{Extracted spectrum of $\beta$\,Pic in the M4368 setting
     (order~7, all three detector chips), reduced with flat-fielding (blue)
-    and without (red).  The black lines show the corresponding
+    and without (red, offset vertically).  The black lines show the corresponding
     \viper{} telluric model for each case. }
   \label{fig:flatcomp}
 \end{figure}
@@ -754,7 +754,6 @@ includes slit tilt and wavelength calibration from telluric standard fits,
 and per-observation forward-model telluric and wavelength correction.
 The resulting archive is browsable and downloadable at
 \url{https://www.astro.uu.se/crires-lm/}.
-
 
 
 \begin{acknowledgements}

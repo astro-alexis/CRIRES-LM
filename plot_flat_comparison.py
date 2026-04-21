@@ -44,10 +44,10 @@ for chip in [1, 2, 3]:
     lbl_flat = "With flat" if chip == 1 else None
     lbl_tell = "Telluric model" if chip == 1 else None
 
-    ax.plot(wl[good_nf], uncorr_nf / med_nf * offset_noflat, color="C3", lw=0.4, alpha=0.9, label=lbl_nf)
-    ax.plot(wl[good], uncorr_flat / med_flat * offset_flat, color="C0", lw=0.4, alpha=0.9, label=lbl_flat)
-    ax.plot(wl[good_nf], tellur_nf[good_nf] / med_nf * offset_noflat, color="k", lw=0.3, alpha=0.8, label=lbl_tell)
-    ax.plot(wl[good], tellur[good] / med_flat * offset_flat, color="k", lw=0.3, alpha=0.8)
+    ax.plot(wl[good_nf], uncorr_nf / med_nf -1+offset_noflat, color="C3", lw=0.4, alpha=0.9, label=lbl_nf)
+    ax.plot(wl[good], uncorr_flat / med_flat -1+offset_flat, color="C0", lw=0.4, alpha=0.9, label=lbl_flat)
+    ax.plot(wl[good_nf], tellur_nf[good_nf] / med_nf -1+offset_noflat, color="k", lw=0.3, alpha=0.8, label=lbl_tell)
+    ax.plot(wl[good], tellur[good] / med_flat -1+offset_flat, color="k", lw=0.3, alpha=0.8)
 
 ax.set_xlabel("Wavelength (nm)")
 ax.set_ylabel("Normalized flux")
